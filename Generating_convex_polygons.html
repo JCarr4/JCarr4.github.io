@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>Generating convex polygons</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Pages</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Basic Task</a>
+</li>
+<li>
+  <a href="extension_write_up.html">Mathematical Methods</a>
+</li>
+<li>
+  <a href="Generating_convex_polygons.html">Generating Convex Polygons</a>
+</li>
+<li>
+  <a href="group_project_2.html">Antithetic Variates</a>
+</li>
+<li>
+  <a href="Polygons.html">Pick's Theorem &amp; Monte Carlo</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Generating convex polygons</h1>
+
+</div>
+
+
+<div id="convex-polygon-definition" class="section level1">
+<h1>Convex polygon definition</h1>
+<p>For a polygon to be defined as convex all of its’ interior angles must be strictly less than 180 degrees. Another way to look at this is that every vertex of the polygon points outwards and the straight line segment on the inside of the polygon between any two vertices never crosses the boundary of the shape.</p>
+</div>
+<div id="properties-of-convex-polygons" class="section level1">
+<h1>Properties of convex polygons</h1>
+<p>There are several properties that convex polygons have which make them useful in many areas of mathematics. These properties can also be used to easily check whether a polygon is convex. For example if you draw a straight line through a convex polygon it will intersect the edges exactly twice as can be seen in the diagram below:</p>
+<p><img src="Generating_convex_polygons_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<p>The area of a convex polygons relatively easy to calculate as the n sided polygon can be split into n-2 triangles by connecting one vertex to the other non adjacent vertices. Then the area of each triangle can then be easily calculated and then added together to get the area of the polygon. See how this works in the example below:</p>
+<p><img src="Generating_convex_polygons_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>The intersection of two convex polygons is a convex polygon. See the example below where a convex hexagon intersects with a convex triangle and the intersection forms a convex quadrilateral:</p>
+<p><img src="Generating_convex_polygons_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>Another property of convex polygons is that any line segment joining two points within the polygon will lie completely within the polygon. This is not always true for concave polygons as shown in the diagram below:</p>
+<p><img src="Generating_convex_polygons_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+</div>
+<div id="jarviss-algorithm" class="section level1">
+<h1>Jarvis’s Algorithm</h1>
+<p>There are a few ways of generating convex polygons to enclose a given set of points. One example is Jarvis’s algorithm also known as the gift wrapping algorithm. This algorithm was first published by R.A. Jarvis in 1973 and it finds the convex hull of a set of given coordinates. To simplify the algorithm we are going to assume that no two points are the same and that no two points would cause lines to be projected such that they would overlap with the same gradient. The algorithm works as follows:</p>
+<ol style="list-style-type: decimal">
+<li><p>Firstly set the initial starting point, p, as the left most point in the set coordinates. This is the point with the lowest x-value. If two points have the same lowest x-value choosing either will work.</p></li>
+<li><p>From this point extend lines to each of the other coordinates in turn. Looking at these lines choose the one furthest left from the perspective of the point p, looking towards the other points. Call the point this line extends to q. Keeping the line pq, remove all other lines.</p></li>
+<li><p>Repeat the above step using the new point q as the starting point. Each time to choose the left most line look from the perspective of the current starting point looking towards the other points.</p></li>
+<li><p>Continue repeating this process until reaching point p again.</p></li>
+<li><p>The lines remaining will have formed a convex polygon. All of the points in our set of coordinates will be either vertices of the convex polygon or contained within it.</p></li>
+</ol>
+<div id="example" class="section level2">
+<h2>Example</h2>
+<p>An example of this algorithm can be seen below using the points (1,4), (2,6), (3,5), (3,3), (2,2), (5,4), (7,5) and (6,1). For the first step we plot the points and label the left most point which in this case is (1,4) as p. We then extend lines to each of the points so we can consider which is the left most point.</p>
+<p><img src="Generating_convex_polygons_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>In this case we can see that the lone extending to (2,6) is the furthest left so we will call this point q. Therefore we keep the line pq and remove the others before continuing to repeat the process.</p>
+<p><img src="Generating_convex_polygons_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>We next extend lines to the remaining points from q as shown below:</p>
+<p><img src="Generating_convex_polygons_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>We can see that the left most line now extends to (7,5) so we label this point r. We keep the line qr along with pq and continue the process.</p>
+<p><img src="Generating_convex_polygons_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>Repeating the process three more times we get the convex pentagon pqrst seen below:</p>
+<p><img src="Generating_convex_polygons_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>All of our points are either vertices of pqrst or contained within the convex polygon. This is an effiecient way of creating a polygon from any set of coordinates.</p>
+</div>
+</div>
+<div id="other-methods" class="section level1">
+<h1>Other methods</h1>
+<p>There are several other ways of generating convex polygons however most of these rely on trial end error.</p>
+<p>One example of these methods is rejection sampling where we generate random coordinates and see if they form a convex polygon. If they do we return the polygon and if not we try again with a different set of random coordinates. This method works for polygons with a small amount of sides however it is very inefficient especially for polygons with a larger number of vertices.</p>
+<p>One quicker way of generating convex polygons is to create two lists of x and y coordinates and order them, isolating the extreme points. Then the other coordinates can be organised into two chains and used to create vectors. The x and y components of the vectors can be randomly paired up and used to create vectors. We can then order these vectors by their angle and then in turn put them together end to end to form a convex polygon.</p>
+<div id="references" class="section level3">
+<h3>References</h3>
+<p><a href="https://en.wikipedia.org/wiki/Gift_wrapping_algorithm" class="uri">https://en.wikipedia.org/wiki/Gift_wrapping_algorithm</a></p>
+<p><a href="https://www.geeksforgeeks.org/convex-hull-set-1-jarviss-algorithm-or-wrapping/" class="uri">https://www.geeksforgeeks.org/convex-hull-set-1-jarviss-algorithm-or-wrapping/</a></p>
+<p><a href="https://cglab.ca/~sander/misc/ConvexGeneration/convex.html" class="uri">https://cglab.ca/~sander/misc/ConvexGeneration/convex.html</a></p>
+<p><a href="https://www.mathopenref.com/polygonconvex.html" class="uri">https://www.mathopenref.com/polygonconvex.html</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Convex_polygon" class="uri">https://en.wikipedia.org/wiki/Convex_polygon</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Convex_hull" class="uri">https://en.wikipedia.org/wiki/Convex_hull</a></p>
+<p><a href="http://www.assignmentpoint.com/science/mathematic/convex-polygon-definition-properties.html" class="uri">http://www.assignmentpoint.com/science/mathematic/convex-polygon-definition-properties.html</a></p>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
